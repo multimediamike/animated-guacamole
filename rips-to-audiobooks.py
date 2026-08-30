@@ -1,25 +1,59 @@
 #!/usr/bin/python
 
-import subprocess
+import argparse
 import glob
 import multiprocessing
 import os
+import subprocess
 import sys
+
 
 def encode(command):
     (status, output) = subprocess.getstatusoutput(command)
     return (status, command)
 
-if __name__ == "__main__":
-    # verify arguments
-    if len(sys.argv) < 6:
-        print("USAGE: rips-to-audiobook.py <base input path> <output path> <book title> <book author> <file base name>")
-        sys.exit(1)
-    base_input_path = sys.argv[1]
-    output_path = sys.argv[2]
-    book_title = sys.argv[3]
-    book_author = sys.argv[4]
-    file_base_name = sys.argv[5]
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Convert a sequence of raw CD rips to a sequence of compressed files."
+    )
+    parser.add_argument(
+        "--base_input_path",
+        help="Path to the base input directory/file.",
+    )
+    parser.add_argument(
+        "--output_path",
+        help="Path to write output to.",
+    )
+    parser.add_argument(
+        "--book_title",
+        help="Title of the book.",
+    )
+    parser.add_argument(
+        "--book_author",
+        help="Author of the book.",
+    )
+    parser.add_argument(
+        "--file_base_name",
+        help="Base name to use for generated output files.",
+    )
+    parser.add_argument(
+        "--encode-opus",
+        action="store_true",
+        help="If set, encode audio output using the Opus codec instead of MP3.",
+    )
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+    print(args)
+    base_input_path: str = args.base_input_path
+    output_path: str = args.output_path
+    book_title: str = args.book_title
+    book_author: str = args.book_author
+    file_base_name: str = args.file_base_name
+    encode_opus: bool = args.encode_opus
 
     # verify that the FFmpeg build is available
     FFMPEG = os.getenv("FFMPEG", "ffmpeg")
@@ -72,3 +106,7 @@ if __name__ == "__main__":
             print(result)
     except StopIteration:
         pass
+
+
+if __name__ == "__main__":
+    main()
