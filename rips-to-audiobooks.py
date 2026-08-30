@@ -15,7 +15,7 @@ def encode(command):
 if __name__ == "__main__":
     # verify arguments
     if len(sys.argv) < 6:
-        print "USAGE: rips-to-audiobook.py <base input path> <output path> <book title> <book author> <file base name>"
+        print("USAGE: rips-to-audiobook.py <base input path> <output path> <book title> <book author> <file base name>")
         sys.exit(1)
     base_input_path = sys.argv[1]
     output_path = sys.argv[2]
@@ -30,7 +30,7 @@ if __name__ == "__main__":
 
     # verify that the output directory already exists
     if not os.path.exists(output_path):
-        print "Output path does not exist: " + output_path
+        print("Output path does not exist: ") + output_path
         sys.exit(1)
 
     # search for "discN" directories
@@ -43,7 +43,7 @@ if __name__ == "__main__":
             break
 
     if not disc_count:
-        print "Could not find any 'discN' subdirectories in " + base_input_path
+        print("Could not find any 'discN' subdirectories in ") + base_input_path
         sys.exit(1)
 
     # enumerate the files to be encoded
@@ -62,7 +62,7 @@ if __name__ == "__main__":
     try:
         while True:
             result = it.next()
-            print result
+            print(result)
     except StopIteration:
         pass
         
