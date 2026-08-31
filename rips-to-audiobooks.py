@@ -63,7 +63,7 @@ def main():
             sys.exit(1)
     else:
         FFMPEG = os.getenv("FFMPEG", "ffmpeg")
-        (status, output) = subprocess.getstatusoutput(FFMPEG + " --help")
+        (status, output) = subprocess.getstatusoutput(FFMPEG + " --help < /dev/null")
         if status != 0:
             print("'%s' could not be executed\nreturn status = %d, message:\n%s" % (FFMPEG, status, output))
             sys.exit(1)
@@ -97,20 +97,21 @@ def main():
         tracks = sorted(glob.glob(disc_dir + "/track*.wav"))
         for j in range(len(tracks)):
             output_filename = "%s/%s-disc-%02d-ch-%02d." % (output_path, file_base_name, disc_number, j+1)
+            track_title = "Disc %d, track %d" % (disc_number, j+1)
             if args.encode_opus:
-                output_filename += "ogg"
+                output_filename += "opus"
                 command = (
-                    "%s --bitrate 48 --vbr "
+                    "%s --bitrate 40 --music --vbr "
                     "--artist \"%s\" --album \"%s\" --title \"%s\" "
-                    "%s %s"
-                ) % (OPUSENC, book_author, book_title, book_title, tracks[j], output_filename)
+                    "\"%s\" \"%s\""
+                ) % (OPUSENC, book_author, book_title, track_title, tracks[j], output_filename)
             else:
                 output_filename += "mp3"
                 command = (
-                    "%s -loglevel panic -y -i %s -codec:a libmp3lame -qscale:a 8 "
+                    "%s -loglevel panic -y -i \"%s\" -codec:a libmp3lame -qscale:a 8 "
                     "-metadata artist=\"%s\" -metadata album=\"%s\" "
-                    "-metadata title=\"%s\" -metadata genre=\"Audiobooks\" %s"
-                ) % (FFMPEG, tracks[j], book_author, book_title, book_title, output_filename)
+                    "-metadata title=\"%s\" -metadata genre=\"Audiobooks\" \"%s\" < /dev/null"
+                ) % (FFMPEG, tracks[j], book_author, book_title, track_title, output_filename)
             ffmpeg_commands.append(command)
         disc_number += 1
 
