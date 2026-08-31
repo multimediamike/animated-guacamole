@@ -18,23 +18,23 @@ def parse_args():
         description="Convert a sequence of raw CD rips to a sequence of compressed files."
     )
     parser.add_argument(
-        "--base_input_path",
+        "--base-input-path",
         help="Path to the base input directory/file.",
     )
     parser.add_argument(
-        "--output_path",
+        "--output-path",
         help="Path to write output to.",
     )
     parser.add_argument(
-        "--book_title",
+        "--book-title",
         help="Title of the book.",
     )
     parser.add_argument(
-        "--book_author",
+        "--book-author",
         help="Author of the book.",
     )
     parser.add_argument(
-        "--file_base_name",
+        "--file-base-name",
         help="Base name to use for generated output files.",
     )
     parser.add_argument(
@@ -47,7 +47,6 @@ def parse_args():
 
 def main():
     args = parse_args()
-    print(args)
     base_input_path: str = args.base_input_path
     output_path: str = args.output_path
     book_title: str = args.book_title
@@ -56,11 +55,18 @@ def main():
     encode_opus: bool = args.encode_opus
 
     # verify that the FFmpeg build is available
-    FFMPEG = os.getenv("FFMPEG", "ffmpeg")
-    (status, output) = subprocess.getstatusoutput(FFMPEG + " --help")
-    if status != 0:
-        print("'%s' could not be executed\nreturn status = %d, message:\n%s" % (FFMPEG, status, output))
-        sys.exit(1)
+    if args.encode_opus:
+        OPUSENC = "opusenc"
+        (status, output) = subprocess.getstatusoutput(OPUSENC + " --help")
+        if status != 0:
+            print("'%s' could not be executed\nreturn status = %d, message:\n%s" % (OPUSENC, status, output))
+            sys.exit(1)
+    else:
+        FFMPEG = os.getenv("FFMPEG", "ffmpeg")
+        (status, output) = subprocess.getstatusoutput(FFMPEG + " --help")
+        if status != 0:
+            print("'%s' could not be executed\nreturn status = %d, message:\n%s" % (FFMPEG, status, output))
+            sys.exit(1)
 
     # verify that the output directory already exists
     if not os.path.exists(output_path):
@@ -90,8 +96,21 @@ def main():
     for disc_dir in sorted_disc_dirs:
         tracks = sorted(glob.glob(disc_dir + "/track*.wav"))
         for j in range(len(tracks)):
-            output_filename = "%s/%s-disc-%02d-ch-%02d.mp3" % (output_path, file_base_name, disc_number, j+1)
-            command = "%s -loglevel panic -y -i %s -codec:a libmp3lame -qscale:a 8 -metadata artist=\"%s\" -metadata album=\"%s\" -metadata title=\"%s\" -metadata genre=\"Audiobooks\" %s" % (FFMPEG, tracks[j], book_author, book_title, book_title, output_filename)
+            output_filename = "%s/%s-disc-%02d-ch-%02d." % (output_path, file_base_name, disc_number, j+1)
+            if args.encode_opus:
+                output_filename += "ogg"
+                command = (
+                    "%s --bitrate 48 --vbr "
+                    "--artist \"%s\" --album \"%s\" --title \"%s\" "
+                    "%s %s"
+                ) % (OPUSENC, book_author, book_title, book_title, tracks[j], output_filename)
+            else:
+                output_filename += "mp3"
+                command = (
+                    "%s -loglevel panic -y -i %s -codec:a libmp3lame -qscale:a 8 "
+                    "-metadata artist=\"%s\" -metadata album=\"%s\" "
+                    "-metadata title=\"%s\" -metadata genre=\"Audiobooks\" %s"
+                ) % (FFMPEG, tracks[j], book_author, book_title, book_title, output_filename)
             ffmpeg_commands.append(command)
         disc_number += 1
 
